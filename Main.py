@@ -52,6 +52,10 @@ class Studentimage():
         img1 = self.ReadFromArray(UniqueID)
         return (img1)
 
+    def SetInfo(self, Value, Name):
+        UniqueID = self.GetUniqueID(Name)
+        self.AddBinaryNumberToTheImage(Value, UniqueID)
+
 
 def NumberToPinary(Num):
     binaryval = bin(Num)[2:]
@@ -81,12 +85,6 @@ def ReturnIndicatorPixelAsArray(PictureAsArray):
     return [LastPixel[0] % 2, LastPixel[1] % 2, LastPixel[2] % 2]
 
 
-# def SetInfo(img, Value, Name):
-#     UniqueID = GetUniqueID(Name)
-#     img1 = AddBinaryNumberToArray(img, Value, UniqueID)
-#     return img1
-
-
 img = Studentimage("D:/Images/Image11.png")
-img.AddBinaryNumberToTheImage("00110011", 1079)
-print(img.GetInfo("Address"))
+img.SetInfo("00110000", "GPA")
+print(img.GetInfo("GPA"))
