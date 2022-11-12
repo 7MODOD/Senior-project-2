@@ -45,14 +45,14 @@ class Studentimage():
 
                                                                    [len(self.TheImage) - len(BinaryArray) + x], index, BinaryArray[x])
 
-    #
-
-    def ReadFromArray(self, LineNumber):
+    # Read The Number of characters for the data in this row
+    def ReadCharacterCount(self, LineNumber):
         value = ""
         for x in range(0, 8):
             value += str(self.TheImage[LineNumber][-(8-x)][0] % 2)
         return value
 
+    # Return the ID of the data of this name
     def GetUniqueID(self, Name):
         myitem = {}
         for item in self.array:
@@ -63,15 +63,17 @@ class Studentimage():
             return
         return myitem.Value
 
+    # Return the value of the data
     def GetInfo(self, Name):
         UniqueID = self.GetUniqueID(Name)
         if (UniqueID is None):
             return
 
-        img1 = self.ReadFromArray(UniqueID)
+        img1 = self.ReadCharacterCount(UniqueID)
         CharactersCount = int(self.BinaryToNumber(img1))
-        self.ReadData(UniqueID, CharactersCount)
+        return self.ReadData(UniqueID, CharactersCount)
 
+    # Read the value of the data from the image
     def ReadData(self, Line, NumberOfCharacters):
         row = 0
         value = ""
@@ -79,8 +81,9 @@ class Studentimage():
             value += str(self.TheImage[row][Line][0] % 2)
             row += 1
             Line += 1
-        print(self.BinaryToString(value))
+        return self.BinaryToString(value)
 
+    # Set the data value of this data name
     def SetInfo(self, Name,  Value):
         BinaryNumber = self.NumberToBinary(len(Value))
         UniqueID = self.GetUniqueID(Name)
@@ -89,6 +92,7 @@ class Studentimage():
         self.AddCharacterCountToImage(BinaryNumber, UniqueID)
         self.AddBinaryValueToTheImage(self.StringtoBinary(Value), UniqueID)
 
+    # Add the data value as binary to the image in the selected row
     def AddBinaryValueToTheImage(self, BinaryValue, UniqueID):
         index = 0
         for x in range(UniqueID, UniqueID+len(BinaryValue)):
@@ -141,7 +145,7 @@ class Studentimage():
         return (''.join('{0:08b}'.format(ord(x), 'b') for x in string))
 
 # The types of data we can edit in the picture :
-# Note: U need to set the data at least once for each picture.
+# Note: U need to set the data at least once for each picture before u can read it.
         # Name.
         # Email address.
         # University ID.
@@ -153,6 +157,7 @@ class Studentimage():
         # Student academic status.
         # Phone number.
 
+
     # Read The Picture
 img = Studentimage("D:/Images/Image11.png")
 
@@ -161,4 +166,19 @@ img.SetInfo("GPA", "3.5")
 
 # Image need to be saved after finishing editing.
 img.Save()
-img.GetInfo("GPA")
+
+# Return the value of the specific Data
+print(img.GetInfo("GPA"))
+
+# Read New picture
+img = Studentimage("D:/Images/Image.png")
+
+
+# Set the address to "On the mountain"
+img.SetInfo("Address", "On the mountain")
+
+
+# Image Saved
+img.Save()
+
+print(img.GetInfo("Address"))
