@@ -11,7 +11,7 @@ class ImageData():
 
 
 # You can edit those to add more attributes to be added to the image.
- # Note : Select a second arguments that does not exist already.
+# Note : Select a second arguments that does not exist already.
 array = []
 array.append(ImageData("Name", 5))
 array.append(ImageData("Email Address", 17))
@@ -29,7 +29,7 @@ class Studentimage():
 
     def __init__(self, ImagePath):
         self.ImagePath = ImagePath
-        self.TheImage = np.asarray(Image.open(ImagePath))
+        self.TheImage = np.array(Image.open(ImagePath))
         self.array = array
     # Save the changes of the image after editing.
 
@@ -146,6 +146,7 @@ class Studentimage():
 
 # The types of data we can edit in the picture :
 # Note: U need to set the data at least once for each picture before u can read it.
+        #  "D:/ProfilePictures/201812451.png"
         # Name.
         # Email address.
         # University ID.
@@ -157,28 +158,8 @@ class Studentimage():
         # Student academic status.
         # Phone number.
 
-
     # Read The Picture
-img = Studentimage("D:/Images/Image11.png")
-
-# Both arguments should be strings.
-img.SetInfo("GPA", "3.5")
-
-# Image need to be saved after finishing editing.
-img.Save()
-
-# Return the value of the specific Data
-print(img.GetInfo("GPA"))
-
-# Read New picture
-img = Studentimage("D:/Images/Image.png")
-
-
-# Set the address to "On the mountain"
-img.SetInfo("Address", "On the mountain")
-
-
-# Image Saved
-img.Save()
-
-print(img.GetInfo("Address"))
+for x in range(0, 20):
+    img = Studentimage("D:/Images/Image11.png")
+    img.SetInfo("Name", "Yousef"+str(x))
+print(img.GetInfo("Tawjihi grade"))
