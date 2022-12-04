@@ -1,6 +1,9 @@
+import pandas as ps
+import os
 import sys
 import numpy as np
 from PIL import Image
+Image.LOAD_TRUNCATED_IMAGES = True
 
 
 class ImageData():
@@ -11,7 +14,7 @@ class ImageData():
 
 
 # You can edit those to add more attributes to be added to the image.
-# Note : Select a second arguments that does not exist already.
+# Note : Select a second arguments that is unique .
 array = []
 array.append(ImageData("Name", 5))
 array.append(ImageData("Email Address", 17))
@@ -29,6 +32,7 @@ class Studentimage():
 
     def __init__(self, ImagePath):
         self.ImagePath = ImagePath
+
         self.TheImage = np.array(Image.open(ImagePath))
         self.array = array
     # Save the changes of the image after editing.
@@ -158,8 +162,23 @@ class Studentimage():
         # Student academic status.
         # Phone number.
 
-    # Read The Picture
-for x in range(0, 20):
-    img = Studentimage("D:/Images/Image11.png")
-    img.SetInfo("Name", "Yousef"+str(x))
-print(img.GetInfo("Tawjihi grade"))
+
+def SaveFileInformationsToStudents(path):
+
+    data = ps.read_excel(path, dtype="object")
+
+    print(data)
+    for title in data:
+        if (title == "ID"):
+            for index in range(0, len(data[title])):
+                print(index)
+                img = Studentimage("D:/Images/"+str(data[title][index])+".png")
+                for dataa in data:
+                    if (dataa != "ID"):
+                        img.SetInfo(dataa, str(data[dataa][index]))
+                img.Save()
+
+
+# SaveFileInformationsToStudents("D:\Marks.xlsx")
+img = Studentimage("D:/Images/99.png")
+print(img.GetInfo("GPA"))
