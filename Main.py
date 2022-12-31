@@ -1,13 +1,96 @@
+import uvicorn as uvicorn
+from fastapi import FastAPI, File, UploadFile
+from PIL import Image
+from fastapi.responses import JSONResponse
+from starlette.responses import Response
+
+from models.UserRequests import *
+from ImageData import ImageData
+from StudentImage import StudentImage
+import pics
+import sqlite3
+
+app = FastAPI()
+
+conn = sqlite3.connect('IMAGES.db')
+#cursor = conn.cursor()
+
+#cursor.execute("create table Images(id integer primary key, image BLOB)")
+#cursor.execute("select * from Images")
+#result = cursor.fetchall()
+#print(result)
+
+
+@app.get(
+    "/image",
+    responses = {
+        200: {
+            "content": {"image/png": {}}
+        }
+    },
+    response_class=Response,
+)
+def get_image():
+    conn = sqlite3.connect('IMAGES.db')
+    qur = "select Image from Images where id = 201812169"
+    curs = conn.cursor()
+
+    result = curs.execute(qur).fetchone()
+    image_bytes: bytes = result[0]
+    # media_type here sets the media type of the actual response sent to the client.
+    return Response(content=[image_bytes,image_bytes,image_bytes], media_type="image/png")
+
+@app.get('/')
+def homePage():
+    return {"home"}
+
+@app.post('/admin')
+def adminLogin(req: UserLogin):
+    conn = sqlite3.connect('IMAGES.db')
+    cursor = conn.cursor()
+    cursor.execute('''select image from Images where id = ?''',(req.username, ))
+    info = cursor.fetchone()
+    myImg = Image.open(info)
+
+    if info is not None:
+        stImg = ImageData()
+        stInfo = stImg.getTheInformationNames(req.username)
+        student = StudentImage(info, stInfo)
+        password = student.GetInfo("password")
+        if req.password == password:
+            result = student.GetStudentInformation()
+            return {result, myImg.thumbnail(200, 200)}
+        else:
+            return {None}
+    else:
+        return {None}
+
+
+
+
+
+
+def getCurrentUser(token:str):
+    token1 = token.split(':')
+    username = token1[0]
+    password = token1[1]
+
+    return
+@app.get('/users/{userId}')
+def userLogin(userId: int):
+
+    return
+
+
+
+
+
+"""
 import sys
 import numpy as np
 from PIL import Image
-
-
-class ImageData():
-
-    def __init__(self, Header, Value):
-        self.Header = Header
-        self.Value = Value
+from ImageData import ImageData
+from StudentImage import StudentImage
 
 
 # You can edit those to add more attributes to be added to the image.
@@ -25,124 +108,6 @@ array.append(ImageData("Phone number", 51))
 array.append(ImageData("Student academic status", 864))
 
 
-class Studentimage():
-
-    def __init__(self, ImagePath):
-        self.ImagePath = ImagePath
-        self.TheImage = np.array(Image.open(ImagePath))
-        self.array = array
-    # Save the changes of the image after editing.
-
-    def Save(self):
-        img = Image.fromarray(self.TheImage)
-        img.save(self.ImagePath)
-
-    # Add The count of the characters to the image as binary
-    def AddCharacterCountToImage(self, BinaryArray, LineNumber):
-        index = 0
-        for x in range(0, len(BinaryArray)):
-            self.TheImage[LineNumber][-(8-x)] = self.AddBitToPixel(self.TheImage[LineNumber]
-
-                                                                   [len(self.TheImage) - len(BinaryArray) + x], index, BinaryArray[x])
-
-    # Read The Number of characters for the data in this row
-    def ReadCharacterCount(self, LineNumber):
-        value = ""
-        for x in range(0, 8):
-            value += str(self.TheImage[LineNumber][-(8-x)][0] % 2)
-        return value
-
-    # Return the ID of the data of this name
-    def GetUniqueID(self, Name):
-        myitem = {}
-        for item in self.array:
-            if (item.Header == Name):
-                myitem = item
-        if (myitem == {}):
-            print("No Data with this name")
-            return
-        return myitem.Value
-
-    # Return the value of the data
-    def GetInfo(self, Name):
-        UniqueID = self.GetUniqueID(Name)
-        if (UniqueID is None):
-            return
-
-        img1 = self.ReadCharacterCount(UniqueID)
-        CharactersCount = int(self.BinaryToNumber(img1))
-        return self.ReadData(UniqueID, CharactersCount)
-
-    # Read the value of the data from the image
-    def ReadData(self, Line, NumberOfCharacters):
-        row = 0
-        value = ""
-        while (row != NumberOfCharacters * 8):
-            value += str(self.TheImage[row][Line][0] % 2)
-            row += 1
-            Line += 1
-        return self.BinaryToString(value)
-
-    # Set the data value of this data name
-    def SetInfo(self, Name,  Value):
-        BinaryNumber = self.NumberToBinary(len(Value))
-        UniqueID = self.GetUniqueID(Name)
-        if (UniqueID is None):
-            return
-        self.AddCharacterCountToImage(BinaryNumber, UniqueID)
-        self.AddBinaryValueToTheImage(self.StringtoBinary(Value), UniqueID)
-
-    # Add the data value as binary to the image in the selected row
-    def AddBinaryValueToTheImage(self, BinaryValue, UniqueID):
-        index = 0
-        for x in range(UniqueID, UniqueID+len(BinaryValue)):
-            self.TheImage[index][x] = self.AddBitToPixel(
-                self.TheImage[index][x], 0, BinaryValue[index])
-            index += 1
-
-    # Convert Number into binary of 8 bits
-
-    def NumberToBinary(self, Num):
-        binaryval = bin(Num)[2:]
-        while (len(binaryval) < 8):
-            binaryval = "0"+binaryval
-        return str(binaryval)
-
-    # Convert Binary to number
-    def BinaryToNumber(self, Num):
-        Number = int(Num)
-        Multiplier = 1
-        Value = 0
-        while Number != 0:
-            bit = Number % 10
-            Value += int(Multiplier*bit)
-            Multiplier *= 2
-            Number = int(Number/10)
-        return Value
-
-    # Return the pixel after adding the bit to the index(index)of the pixel
-    def AddBitToPixel(self, pixel, index, value):
-        if pixel[index] % 2 != int(value):
-            pixel[index] += 1
-        return pixel
-
-    # Get The indicator of the picture (the pixel of last column and last row)
-    def Indicator(self, PictureAsArray):
-        LastPixel = PictureAsArray[-1][-1]
-        return [LastPixel[0] % 2, LastPixel[1] % 2, LastPixel[2] % 2]
-
-    # Convert Series of bits into string (Each character 8 bits )
-    def BinaryToString(self, BinaryArray,):
-        value = ""
-        for x in range(0, len(BinaryArray), 8):
-            temp = BinaryArray[x:x+8]
-            value += chr(self.BinaryToNumber(temp))
-        return value
-
-    # Convert string into series of bits (Each character is 8 bits )
-
-    def StringtoBinary(self, string):
-        return (''.join('{0:08b}'.format(ord(x), 'b') for x in string))
 
 # The types of data we can edit in the picture :
 # Note: U need to set the data at least once for each picture before u can read it.
@@ -159,7 +124,40 @@ class Studentimage():
         # Phone number.
 
     # Read The Picture
-for x in range(0, 20):
-    img = Studentimage("D:/Images/Image11.png")
-    img.SetInfo("Name", "Yousef"+str(x))
-print(img.GetInfo("Tawjihi grade"))
+
+img = StudentImage("D:/image3.jpg",array)
+img.SetInfo("Name", "Yousef")
+img.SetInfo("Email Address", "Yousef@gmail.com")
+img.SetInfo("University ID", "201812169")
+img.SetInfo("GPA", "2.54")
+img.SetInfo("Tawjihi grade", "95.5")
+img.SetInfo("Address", "jenin_aaup")
+img.SetInfo("ID number", "374821461")
+img.SetInfo("Date of birth", "22-12-2022")
+img.SetInfo("Student academic status", "active")
+img.SetInfo("Phone number", "+970597876548")
+
+
+
+
+
+print(img.GetInfo("Name"))
+print(img.GetInfo("GPA"))
+print(img.GetInfo("Phone number"))
+print(img.GetStudentInformation())
+
+
+"""
+stImg = ImageData()
+stInfo = stImg.getTheInformationNames("201812169")
+img = StudentImage("D:/image3.jpg", stInfo)
+img.SetInfo("Name", "Yousef")
+img.SetInfo("University ID", "201812169")
+img.SetInfo("Email Address", "Yousef@gmail.com")
+path = "C:/Users/od7mo/OneDrive/Desktop/py_senior/Senior-project-2/transcript.csv"
+img.AddTranscript(path)
+print(img.TranscriptRead())
+print(img.GetInfo("University ID"))
+
+if __name__ == "__main__":
+    uvicorn.run(app, port=8000)
