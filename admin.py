@@ -9,6 +9,7 @@ from models.UserRequests import *
 from ImageData import *
 class AdminComponent:
 
+
     def studentImageHandler_org(self, id):
         image = AdminQueries.getImg_org(id)
         image_bytes = BytesIO(image[0])
@@ -41,7 +42,6 @@ class AdminComponent:
 
     def add_new_student(self, req: Createuser):
         student_info = self.studentImageHandler(req.studentId)
-
 
         student_info.SetInfo('name', str(req.name))
         student_info.SetInfo('email', str(req.email))
@@ -86,6 +86,12 @@ class AdminComponent:
         AdminQueries.updateImg(id, imagebytes)
         return True
 
+    def get_org_image_by_id(self, studentId):
+        student_info = self.studentImageHandler_org(studentId)
+        image2 = Image.fromarray(student_info.TheImage)
+        image2.thumbnail((200,200))
+        image3 = self.ImageToBlob(image2)
+        return image3
 
 
 

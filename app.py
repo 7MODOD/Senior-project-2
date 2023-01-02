@@ -1,5 +1,5 @@
 import uvicorn as uvicorn
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile,Request,Response
 
 from admin import AdminComponent
 from models.dbModel import *
@@ -52,6 +52,16 @@ def updatestudent(req: Updateuser_byAdmin, student_id: int):
     return JSONResponse({"status": "at least one field should be filled"}, status_code=400)
 
 
+@app.get('/admin/students/{student_id}/image', responses= {
+                            200: {"content": {"image/png": {}}}})
+def getOrgImage(student_id: int):
+    admin = AdminComponent()
+    exist = admin.checkStudent(str(student_id))
+    if not exist:
+        return JSONResponse({"status": "insert the image first"}, status_code=400)
+    result = admin.get_org_image_by_id(student_id)
+
+    return Response(content=result, media_type="image/png")
 
 #PUT /admin/students/{ID_NUMBER}
 
