@@ -2,7 +2,6 @@
 from io import BytesIO
 
 from PIL import Image
-import numpy as np
 from StudentImage import StudentImage
 from models.dbModel import *
 from models.UserRequests import *
@@ -37,11 +36,10 @@ class AdminComponent:
         result = AdminQueries.getImg_org(id)
         if not result:
             return False
-
         return True
 
     def add_new_student(self, req: Createuser):
-        student_info = self.studentImageHandler(req.studentId)
+        student_info = self.studentImageHandler_org(req.studentId)
 
         student_info.SetInfo('name', str(req.name))
         student_info.SetInfo('email', str(req.email))
@@ -52,6 +50,7 @@ class AdminComponent:
         student_info.SetInfo('dateOfBirth', str(req.dateOfBirth))
         student_info.SetInfo('phoneNumber', str(req.phoneNumber))
         student_info.SetInfo('status',"Active")
+        student_info.SetPassword(str(req.name)+'@'+str(req.studentId), req.studentId)
 
         image2 = Image.fromarray(student_info.TheImage)
 
@@ -61,13 +60,11 @@ class AdminComponent:
 
         return {200, "success"}
 
-    def get_student_by_id(self, id):
-        image = AdminQueries.getImage(id)
-        image_bytes = BytesIO(image[0])
-        img_data = ImageData()
-        array = img_data.getTheInformationNames(id)
-        student_info = StudentImage(image_bytes, array)
+    def add_new_image(self, id: int, img: bytes):
+        AdminQueries.createImg(id, None, img)
 
+    def get_student_by_id(self, id):
+        student_info = self.studentImageHandler(id)
         result = student_info.GetStudentInformation()
 
         return result
@@ -93,6 +90,68 @@ class AdminComponent:
         image3 = self.ImageToBlob(image2)
         return image3
 
+    def deactivate_student(self,student_id:int):
+        student_info = self.studentImageHandler(student_id)
+        if not student_info:
+            return False
+        student_info.SetInfo("status","Deactivated")
+        image = Image.fromarray(student_info.TheImage)
+        imagebytes = self.ImageToBlob(image)
+        AdminQueries.updateImg(student_id, imagebytes)
+        return True
+
+    def activate_student(self,student_id:int):
+        student_info = self.studentImageHandler(student_id)
+        if not student_info:
+            return False
+        student_info.SetInfo("status","active")
+        image = Image.fromarray(student_info.TheImage)
+        imagebytes = self.ImageToBlob(image)
+        AdminQueries.updateImg(student_id, imagebytes)
+        return True
+
+    def check_students_limit(self,offset):
+        number_of_students = AdminQueries.image_count()
+        if offset > number_of_students[0]:
+            return False
+        return True
+
+    def get_students(self,page,page_size):
+        offset = (page-1) * page_size
+        check = self.check_students_limit(offset)
+        if not check:
+            return None
+        images = AdminQueries.get_images(offset,page_size)
+        result =[]
+        for img in images:
+            info = self.get_student_by_id(int(img[0]))
+            resp = AllStudentsResponse()
+            resp.id = info["studentId"]
+            resp.name = info["name"]
+            resp.email = info["email"]
+            resp.status = info["status"]
+            resp.image = f"/admin/students/{img[0]}/image"
+            result.append(resp)
+        return result
+
+    def store_transcript(self,transcript, id):
+        student_image = self.studentImageHandler_org(id)
+        student_info = self.get_student_by_id(id)
+        for info in student_info:
+            student_image.SetInfo(info, student_info[info])
+        student_image.AddTranscript(transcript, id)
+        image = Image.fromarray(student_image.TheImage)
+        image_bytes = self.ImageToBlob(image)
+        AdminQueries.updateImg(id, image_bytes)
+
+    def read_transcript(self, id):
+        student_info = self.studentImageHandler(id)
+        transcript = student_info.TranscriptRead(id)
+        return transcript
+
+
+
+
 
 
 
@@ -108,10 +167,9 @@ class AdminQueries:
         return result
 
     @staticmethod
-    def getImages( page, page_size):
-        offset = page*page_size
-        query = "select image from Images offset=? limit= ?"
-        result = execute(query, (offset, page_size))
+    def get_images(offset, page_size):
+        query = "select * from Images limit ? offset ?"
+        result = execute(query, (page_size, offset))
         return result
 
     @staticmethod
@@ -134,12 +192,16 @@ class AdminQueries:
         else:
             query = "update Images set image=? , image_org=? where id=?"
             result = execute(query, (img, img_org, str(id)))
-
-
         return result
 
     @staticmethod
-    def deleteImg( id):
+    def deleteImg(id):
         query = "delete from Images where id=?"
         result = execute(query, (str(id),))
+        return result
+
+    @staticmethod
+    def image_count():
+        query = "select count(image) from Images"
+        result = execute(query, None, True)
         return result

@@ -4,6 +4,7 @@ from PIL import Image
 from fastapi.responses import JSONResponse
 from starlette.responses import Response
 
+import admin
 from models.UserRequests import *
 from ImageData import ImageData
 from StudentImage import StudentImage
@@ -20,7 +21,7 @@ conn = sqlite3.connect('IMAGES.db')
 #result = cursor.fetchall()
 #print(result)
 
-
+"""
 @app.get(
     "/image",
     responses = {
@@ -85,7 +86,7 @@ def userLogin(userId: int):
 
 
 
-"""
+
 import sys
 import numpy as np
 from PIL import Image
@@ -146,18 +147,20 @@ print(img.GetInfo("GPA"))
 print(img.GetInfo("Phone number"))
 print(img.GetStudentInformation())
 
-
 """
+
 stImg = ImageData()
 stInfo = stImg.getTheInformationNames("201812169")
-img = StudentImage("D:/image3.jpg", stInfo)
+ad = admin.AdminComponent()
+img = ad.studentImageHandler_org(201812169)
+
 img.SetInfo("Name", "Yousef")
 img.SetInfo("University ID", "201812169")
 img.SetInfo("Email Address", "Yousef@gmail.com")
 path = "C:/Users/od7mo/OneDrive/Desktop/py_senior/Senior-project-2/transcript.csv"
-img.AddTranscript(path)
-print(img.TranscriptRead())
+img.AddTranscript(path, 201812169)
+print(img.TranscriptRead(201812169))
 print(img.GetInfo("University ID"))
 
-if __name__ == "__main__":
-    uvicorn.run(app, port=8000)
+#if __name__ == "__main__":
+#    uvicorn.run(app, port=8000)

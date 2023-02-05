@@ -14,6 +14,15 @@ class ImageData():
         for i, j in zip(range(100, 200, key), self.list):
             dec[j] = i
         return dec
+    @staticmethod
+    def get_transcript_location(number):
+        transcript_location = (int(number) % 10) + 200
+        return transcript_location
+
+    @staticmethod
+    def get_password_location(number):
+        password_location = (int(number) % 100) + 300
+        return password_location
 
 """
 i have a transcript of 100 course and 100 mark

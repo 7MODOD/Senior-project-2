@@ -2,6 +2,8 @@ import csv
 
 from PIL import Image
 import numpy as np
+
+from ImageData import ImageData
 from models.UserRequests import Createuser
 class StudentImage():
 
@@ -130,19 +132,26 @@ class StudentImage():
 
 #Transcript Methods
 
-    def ReadStudentMarks(self,file_path):
+    def ReadStudentMarks(self, file):
         transcript = []
-        with open(file_path, 'r') as file:
-            filereader = csv.reader(file)
-            for row in filereader:
-                transcript.append((row[0], row[1]))
+        with open(file.filename, 'r') as f:
+            reader = csv.reader(f)
+            for row in reader:
+                transcript.append(row)
 
         return transcript
 
+    def read_marks_from_file(self,path: str):
+        transcript = []
+        with open(path, 'r') as file:
+            reader = csv.reader(file)
+            for row in reader:
+                transcript.append((row[0], row[1], row[2]))
+        return transcript
 
 
-    def TranscriptStore(self, transcript):
-        start = self.GetUniqueID("transcript")
+    def TranscriptStore(self, transcript,student_id):
+        start = ImageData.get_transcript_location(student_id) #self.GetUniqueID("transcript")
         space = 1500//len(transcript)
         self.AddCharacterCountToImage(self.NumberToBinary(len(transcript)), start)
 
@@ -154,22 +163,27 @@ class StudentImage():
                 binary_number = self.StringtoBinary(str(number_of_courses)) #number of characters in course name
             course_name = self.StringtoBinary(transcript[index][0]) #the course name that we want to store it in the image
             course_mark = self.StringtoBinary(transcript[index][1]) # the student mark that we want to store it in the image with course name
+            if not transcript[index][2]:
+                course_hours = self.StringtoBinary("N")
+            else:
+                course_hours = self.StringtoBinary(transcript[index][2]) # the credit hours of the course
 
             self.AddBinaryValueToTheImage(binary_number, place - 1)
             self.AddBinaryValueToTheImage(course_name, place)
             self.AddBinaryValueToTheImage(course_mark, place + 1)
+            self.AddBinaryValueToTheImage(course_hours, place + 2)
 
         return
 
-    def AddTranscript(self, file_path):
+    def AddTranscript(self, file_path, student_id):
         transcript_info = self.ReadStudentMarks(file_path)
-        self.TranscriptStore(transcript_info)
+        self.TranscriptStore(transcript_info, student_id)
         return
 
 
-    def TranscriptRead(self):
+    def TranscriptRead(self,student_id):
         transcript_info = dict()
-        start = int(self.GetUniqueID("transcript"))
+        start = ImageData.get_transcript_location(student_id) #int(self.GetUniqueID("transcript"))
         number_of_courses = self.BinaryToNumber(self.ReadCharacterCount(start))
         space = 1500//number_of_courses
         end = start +(number_of_courses * space)
@@ -178,18 +192,55 @@ class StudentImage():
             count = self.ReadCourseNameCharacterCount(course - 1)
             course_name = self.ReadData(course,count)
             course_mark = self.ReadData(course+1, 2)
+            course_houre = self.ReadData(course+2, 1)
             if course_mark[1] == '+' or course_mark[1] == '-':
-                transcript_info.update({course_name: course_mark})
+                transcript_info.update({course_name: (course_mark, course_houre)})
             else:
-                transcript_info.update({course_name: course_mark[0]})
-
+                transcript_info.update({course_name: (course_mark[0], course_houre)})
+        gpa = self.GPA_calculator(transcript_info)
+        transcript_info.update({"GPA": gpa})
         return transcript_info
 
 
     def ReadCourseNameCharacterCount(self,UniqueId):
-        numberOfCharacters = self.ReadData(UniqueId, 2)
-        print("this is the number of characters")
-        print(numberOfCharacters)
-        return int(numberOfCharacters)
+        number_of_characters = self.ReadData(UniqueId, 2)
+        return int(number_of_characters)
 
+    def GPA_calculator(self, transcript):
+        grades = {'A': 4.0, 'A-': 3.67, 'B+': 3.33, 'B': 3.0, 'B-': 2.67, 'C+': 2.33, 'C': 2.0, 'C-': 1.67, 'D+': 1.33,
+                  'D': 1.0, 'F': 0.35}
+        summ = 0
+        number_of_hours = 0
+        for course in transcript:
+            if transcript[course][0] in grades:
+                summ += grades[transcript[course][0]] * int(transcript[course][1])
+                number_of_hours += int(transcript[course][1])
+        gpa = summ / number_of_hours
+        return gpa
+
+    def AddBinaryPasswordToTheImage(self, BinaryValue, UniqueID):
+        index = 0
+        for x in range(UniqueID, UniqueID+len(BinaryValue)):
+            self.TheImage[x][index] = self.AddBitToPixel(
+                self.TheImage[x][index], 0, BinaryValue[index])
+            index += 1
+
+    def SetPassword(self, value, student_id):
+        BinaryNumber = self.NumberToBinary(len(str(value)))
+        UniqueID = ImageData.get_password_location(student_id)
+
+        self.AddCharacterCountToImage(BinaryNumber, UniqueID)
+        self.AddBinaryPasswordToTheImage(self.StringtoBinary(value), UniqueID)
+
+    def ReadPassword(self, student_id):
+        UniqueID = ImageData.get_password_location(student_id)
+        img1 = self.ReadCharacterCount(UniqueID)
+        CharactersCount = int(self.BinaryToNumber(img1))
+        row = 0
+        value = ""
+        while (row != CharactersCount * 8):
+            value += str(self.TheImage[UniqueID][row][0] % 2)
+            row += 1
+            UniqueID += 1
+        return self.BinaryToString(value)
 

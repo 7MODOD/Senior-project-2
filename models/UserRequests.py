@@ -34,7 +34,12 @@ class UserUpdate(BaseModel):
     password: str | None = None
     phoneNumber: str | None = None
 
-
+class AllStudentsResponse():
+    id: int
+    name: str | None = ""
+    email: str | None = ""
+    status: str
+    image: str | None = ""
 
 '''
 ["Name","Email Address","University ID", "Tawjihi grade",
