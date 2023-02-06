@@ -19,12 +19,12 @@ from student import StudentComponent
 app = FastAPI()
 
 @app.post('/admin/students/{id_number}/img')
-def send_user_image(image : bytes, id_number: int):
+def send_user_image(image : UploadFile, id_number: int):
     admin = AdminComponent()
     exist = admin.checkStudent(id_number)
     if exist:
         return JSONResponse({"status": "this student is exist"}, status_code=400)
-    admin.add_new_image(id_number, image)
+    admin.add_new_image(id_number, image.file)
     return JSONResponse({"status": "SUCCESS"}, status_code=200)
 
 @app.post('/admin/students/')
@@ -73,7 +73,7 @@ def getOrgImage(student_id: int):
 
     return Response(content=result, media_type="image/png")
 
-@app.post("admin/students/{id_number}/deactivate")
+@app.post("/admin/students/{id_number}/deactivate")
 def deactivate_student(id_number:int):
     admin = AdminComponent()
     exist = admin.checkStudent(str(id_number))
@@ -85,7 +85,7 @@ def deactivate_student(id_number:int):
 
     return JSONResponse({"status": "this student has no information yet"}, status_code=400)
 
-@app.post("admin/students/{id_number}/activate")
+@app.post("/admin/students/{id_number}/activate")
 def deactivate_student(id_number:int):
     admin = AdminComponent()
     exist = admin.checkStudent(str(id_number))

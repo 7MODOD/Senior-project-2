@@ -60,8 +60,9 @@ class AdminComponent:
 
         return {200, "success"}
 
-    def add_new_image(self, id: int, img: bytes):
-        AdminQueries.createImg(id, None, img)
+    def add_new_image(self, id: int, img):
+        image = self.ImageToBlob(Image.open(img))
+        AdminQueries.createImg(id, None, image)
 
     def get_student_by_id(self, id):
         student_info = self.studentImageHandler(id)

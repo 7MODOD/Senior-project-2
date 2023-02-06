@@ -25,7 +25,7 @@ class StudentComponent:
 
 
     def authorization(self,student_id:str, password:str):
-        exist = StudentQueries.getImg(student_id)
+        exist = StudentQueries.getImage(student_id)
         if not exist:
             return False
         student_image = self.studentImageHandler(student_id)
@@ -59,7 +59,6 @@ class StudentComponent:
 
 
 class StudentQueries:
-
     @staticmethod
     def getImage(id):
         query = "select image from Images where id=?"
