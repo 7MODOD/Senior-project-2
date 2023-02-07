@@ -6,8 +6,9 @@ from StudentImage import StudentImage
 from models.dbModel import *
 from models.UserRequests import *
 from ImageData import *
-class AdminComponent:
 
+
+class AdminComponent:
 
     def studentImageHandler_org(self, id):
         image = AdminQueries.getImg_org(id)
@@ -25,12 +26,11 @@ class AdminComponent:
         student_info = StudentImage(image_bytes, array)
         return student_info
 
-    def ImageToBlob(self,image):
+    def ImageToBlob(self, image):
         stream = BytesIO()
         image.save(stream, format="PNG")
         imagebytes = stream.getvalue()
         return imagebytes
-
 
     def checkStudent(self, id):
         result = AdminQueries.getImg_org(id)
@@ -49,8 +49,9 @@ class AdminComponent:
         student_info.SetInfo('govId', str(req.gov_ID))
         student_info.SetInfo('dateOfBirth', str(req.dateOfBirth))
         student_info.SetInfo('phoneNumber', str(req.phoneNumber))
-        student_info.SetInfo('status',"Active")
-        student_info.SetPassword(str(req.name)+'@'+str(req.studentId), req.studentId)
+        student_info.SetInfo('status', "Active")
+        student_info.SetPassword(
+            str(req.name)+'@'+str(req.studentId), req.studentId)
 
         image2 = Image.fromarray(student_info.TheImage)
 
@@ -74,7 +75,7 @@ class AdminComponent:
         student_info = self.studentImageHandler(id)
 
         for item in vars(req):
-            if not getattr(req,item):
+            if not getattr(req, item):
                 continue
             student_info.SetInfo(item, getattr(req, item))
 
@@ -87,47 +88,47 @@ class AdminComponent:
     def get_org_image_by_id(self, studentId):
         student_info = self.studentImageHandler_org(studentId)
         image2 = Image.fromarray(student_info.TheImage)
-        image2.thumbnail((200,200))
+        image2.thumbnail((200, 200))
         image3 = self.ImageToBlob(image2)
         return image3
 
-    def deactivate_student(self,student_id:int):
+    def deactivate_student(self, student_id: int):
         student_info = self.studentImageHandler(student_id)
         if not student_info:
             return False
-        student_info.SetInfo("status","Deactivated")
+        student_info.SetInfo("status", "Deactivated")
         image = Image.fromarray(student_info.TheImage)
         imagebytes = self.ImageToBlob(image)
         AdminQueries.updateImg(student_id, imagebytes)
         return True
 
-    def activate_student(self,student_id:int):
+    def activate_student(self, student_id: int):
         student_info = self.studentImageHandler(student_id)
         if not student_info:
             return False
-        student_info.SetInfo("status","active")
+        student_info.SetInfo("status", "active")
         image = Image.fromarray(student_info.TheImage)
         imagebytes = self.ImageToBlob(image)
         AdminQueries.updateImg(student_id, imagebytes)
         return True
 
-    def check_students_limit(self,offset):
+    def check_students_limit(self, offset):
         number_of_students = AdminQueries.image_count()
         if offset > number_of_students[0]:
             return False
         return True
 
-    def get_students(self,page,page_size):
+    def get_students(self, page, page_size):
         offset = (page-1) * page_size
         check = self.check_students_limit(offset)
         if not check:
             return None
-        images = AdminQueries.get_images(offset,page_size)
-        result =[]
+        images = AdminQueries.get_images(offset, page_size)
+        result = []
         for img in images:
             info = self.get_student_by_id(int(img[0]))
             resp = AllStudentsResponse()
-            resp.id = info["studentId"]
+            resp.studentId = info["studentId"]
             resp.name = info["name"]
             resp.email = info["email"]
             resp.status = info["status"]
@@ -135,7 +136,7 @@ class AdminComponent:
             result.append(resp)
         return result
 
-    def store_transcript(self,transcript, id):
+    def store_transcript(self, transcript, id):
         student_image = self.studentImageHandler_org(id)
         student_info = self.get_student_by_id(id)
         for info in student_info:
@@ -149,15 +150,6 @@ class AdminComponent:
         student_info = self.studentImageHandler(id)
         transcript = student_info.TranscriptRead(id)
         return transcript
-
-
-
-
-
-
-
-
-
 
 
 class AdminQueries:
@@ -176,7 +168,7 @@ class AdminQueries:
     @staticmethod
     def getImage(id):
         query = "select image from Images where id=?"
-        result = execute(query,(id,), True)
+        result = execute(query, (id,), True)
         return result
 
     @staticmethod
