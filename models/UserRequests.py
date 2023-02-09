@@ -2,7 +2,7 @@ from click import DateTime
 from pydantic import BaseModel
 
 class UserLogin(BaseModel):
-    username: str
+    studentId: int
     password: str
 
 
@@ -13,7 +13,7 @@ class Createuser(BaseModel):
     #studentGPA: float
     tawjihiGrade: float
     address: str
-    gov_ID: int
+    govId: int
     dateOfBirth: str
     #status: str
     phoneNumber: str
@@ -24,7 +24,7 @@ class Updateuser_byAdmin(BaseModel):
     name: str | None = None
     email: str | None = None
     tawjihiGrade: float | None = None
-    Address: str | None = None
+    address: str | None = None
     govId: int | None = None
     dateOfBirth: str | None = None
     phoneNumber: str | None = None
@@ -35,7 +35,7 @@ class UserUpdate(BaseModel):
     phoneNumber: str | None = None
 
 class AllStudentsResponse():
-    id: int
+    studentId: int
     name: str | None = ""
     email: str | None = ""
     status: str

@@ -3,7 +3,7 @@ class ImageData():
     def __init__(self):
 
         self.list = ["name","email","studentId", "tawjihiGrade",
-                     "Address","govId","dateOfBirth",
+                     "address","govId","dateOfBirth",
                      "phoneNumber","status"]
 
     def getTheInformationNames(self,number):

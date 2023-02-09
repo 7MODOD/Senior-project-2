@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from student import StudentComponent
 
-#post /admin/students/{ID_NUMBER}
+#post /admin/students/{student_id}
 app = FastAPI()
 
 origins = [
@@ -34,13 +34,13 @@ app.add_middleware(
 )
 
 
-@app.post('/admin/students/{id_number}/img')
-def send_user_image(image: UploadFile, id_number: int):
+@app.post('/admin/students/{student_id}/image')
+def send_user_image(image: UploadFile, student_id: int):
     admin = AdminComponent()
-    exist = admin.checkStudent(id_number)
+    exist = admin.checkStudent(student_id)
     if exist:
         return JSONResponse({"status": "this student is exist"}, status_code=400)
-    admin.add_new_image(id_number, image.file)
+    admin.add_new_image(student_id, image.file)
     return JSONResponse({"status": "SUCCESS"}, status_code=200)
 
 
@@ -93,26 +93,26 @@ def getOrgImage(student_id: int):
     return Response(content=result, media_type="image/png")
 
 
-@app.post("/admin/students/{id_number}/deactivate")
-def deactivate_student(id_number: int):
+@app.post("/admin/students/{student_id}/deactivate")
+def deactivate_student(student_id: int):
     admin = AdminComponent()
-    exist = admin.checkStudent(str(id_number))
+    exist = admin.checkStudent(str(student_id))
     if not exist:
-        return JSONResponse({"status": f"there is no student with this id {id_number}...pls try again"}, status_code=400)
-    response = admin.deactivate_student(id_number)
+        return JSONResponse({"status": f"there is no student with this student_id {student_id}...pls try again"}, status_code=400)
+    response = admin.deactivate_student(student_id)
     if response is True:
         return JSONResponse({"status": "student was deactivated"}, status_code=200)
 
     return JSONResponse({"status": "this student has no information yet"}, status_code=400)
 
 
-@app.post("/admin/students/{id_number}/activate")
-def deactivate_student(id_number: int):
+@app.post("/admin/students/{student_id}/activate")
+def deactivate_student(student_id: int):
     admin = AdminComponent()
-    exist = admin.checkStudent(str(id_number))
+    exist = admin.checkStudent(str(student_id))
     if not exist:
-        return JSONResponse({"status": f"there is no student with this id {id_number}...pls try again"}, status_code=400)
-    response = admin.activate_student(id_number)
+        return JSONResponse({"status": f"there is no student with this student_id {student_id}...pls try again"}, status_code=400)
+    response = admin.activate_student(student_id)
     if response is True:
         return JSONResponse({"status": "student was activated"}, status_code=200)
 
@@ -128,26 +128,26 @@ def get_students(page_number: int = 1, page_size: int = 10):
     return {"students information": resp, }
 
 
-@app.post("/admin/students/{id_number}/transcript")
-def add_transcript(id_number, files: UploadFile):
+@app.post("/admin/students/{student_id}/transcript")
+def add_transcript(student_id, files: UploadFile):
     admin = AdminComponent()
-    exist = admin.checkStudent(id_number)
+    exist = admin.checkStudent(student_id)
     if not exist:
         return JSONResponse({"status": "insert the image first"}, status_code=400)
 
-    admin.store_transcript(files, id_number)
+    admin.store_transcript(files, student_id)
 
     return JSONResponse({"status": "SUCCESS"}, status_code=200)
 
 
-@app.get("/admin/students/{id_number}/transcript")
-def get_student_transcript(id_number):
+@app.get("/admin/students/{student_id}/transcript")
+def get_student_transcript(student_id):
     admin = AdminComponent()
-    exist = admin.checkStudent(str(id_number))
+    exist = admin.checkStudent(str(student_id))
     if not exist:
         return JSONResponse({"status": "insert the image first"}, status_code=400)
 
-    result = admin.read_transcript(id_number)
+    result = admin.read_transcript(student_id)
     return JSONResponse({"student information": result}, status_code=200)
 
 # after this comment the student APIs starts ><<><><>><<>><<<<<<<<<<<<<<<<<<<<<<><><><><><><><><><<>><<>><<>><><><><<>
@@ -156,11 +156,11 @@ def get_student_transcript(id_number):
 @app.post("/login")
 def student_login(req: UserLogin):
     student = StudentComponent()
-    authenticate = student.authorization(req.username, req.password)
+    authenticate = student.authorization(str(req.studentId), req.password)
     if not authenticate:
         return JSONResponse({"status": "the username or password is wrong"}, status_code=400)
 
-    return JSONResponse({"Authorization": f"{req.username}@{req.password}"}, status_code=200)
+    return JSONResponse({"Authorization": f"{req.studentId}@{req.password}"}, status_code=200)
 
 
 @app.get("/students")

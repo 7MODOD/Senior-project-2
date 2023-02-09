@@ -1,8 +1,10 @@
-
+import secrets
+import string
 from io import BytesIO
 
 from PIL import Image
 from StudentImage import StudentImage
+from emails import email
 from models.dbModel import *
 from models.UserRequests import *
 from ImageData import *
@@ -45,19 +47,20 @@ class AdminComponent:
         student_info.SetInfo('email', str(req.email))
         student_info.SetInfo('studentId', str(req.studentId))
         student_info.SetInfo('tawjihiGrade', str(req.tawjihiGrade))
-        student_info.SetInfo('Address', str(req.address))
-        student_info.SetInfo('govId', str(req.gov_ID))
+        student_info.SetInfo('address', str(req.address))
+        student_info.SetInfo('govId', str(req.govId))
         student_info.SetInfo('dateOfBirth', str(req.dateOfBirth))
         student_info.SetInfo('phoneNumber', str(req.phoneNumber))
         student_info.SetInfo('status', "Active")
-        student_info.SetPassword(
-            str(req.name)+'@'+str(req.studentId), req.studentId)
-
+        password = self.generate_password(req.studentId)
+        student_info.SetPassword(password, req.studentId)
+        em = email()
+        em.send(req.email, req.studentId, password)
         image2 = Image.fromarray(student_info.TheImage)
 
-        imagebytes = self.ImageToBlob(image2)
+        image_bytes = self.ImageToBlob(image2)
 
-        AdminQueries.updateImg(req.studentId, imagebytes)
+        AdminQueries.updateImg(req.studentId, image_bytes)
 
         return {200, "success"}
 
@@ -151,6 +154,12 @@ class AdminComponent:
         transcript = student_info.TranscriptRead(id)
         return transcript
 
+    def generate_password(self, student_id):
+        length = (student_id % 10) + 10
+        alphabet = string.ascii_letters + string.digits + string.punctuation
+        alphabet = alphabet.replace('/', '')
+        password = ''.join(secrets.choice(alphabet) for i in range(length))
+        return password
 
 class AdminQueries:
     @staticmethod
